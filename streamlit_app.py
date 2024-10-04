@@ -1,48 +1,33 @@
 import streamlit as st
-import tensorflow as tf
-import streamlit as st
-
-
-@st.cache(allow_output_mutation=True)
-def load_model():
-  model=tf.keras.models.load_model('/content/my_model2.hdf5')
-  return model
-with st.spinner('Model is being loaded..'):
-  model=load_model()
-
-st.write("""
-         # Rohu Fish Freshness Classification
-         """
-         )
-
-file = st.file_uploader("Please upload an brain scan file", type=["jpg", "png"])
-import cv2
-from PIL import Image, ImageOps
 import numpy as np
-st.set_option('deprecation.showfileUploaderEncoding', False)
-def import_and_predict(image_data, model):
-    
-        size = (180,180)    
-        image = ImageOps.fit(image_data, size, Image.ANTIALIAS)
-        image = np.asarray(image)
-        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        #img_resize = (cv2.resize(img, dsize=(75, 75),    interpolation=cv2.INTER_CUBIC))/255.
-        
-        img_reshape = img[np.newaxis,...]
-    
-        prediction = model.predict(img_reshape)
-        
-        return prediction
-if file is None:
-    st.text("Please upload an image file")
-else:
-    image = Image.open(file)
-    st.image(image, use_column_width=True)
-    predictions = import_and_predict(image, model)
-    score = tf.nn.softmax(predictions[0])
-    st.write(prediction)
-    st.write(score)
-    print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
+from PIL import Image
+import tensorflow as tf
+
+# Load your CNN model
+model = tf.keras .models.load_model('your_model.h5')
+
+# Function to make predictions
+def make_prediction(image):
+    img = Image.open(image)
+    img = img.resize((224, 224))  # Resize the image to the input size of your model
+    img_array = np.array(img)
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    predictions = model.predict(img_array)
+    return predictions
+
+# Create the Streamlit app
+st.title("Fresh Fish Classifier")
+st.write("Upload an image of a fish to classify it as fresh or non-fresh")
+
+# File uploader
+uploaded_file = st.file_uploader("Choose an image", type=["jpg", "png"])
+
+if uploaded_file is not None:
+    # Make prediction
+    predictions = make_prediction(uploaded_file)
+    # Get the class with the highest probability
+    class_index = np.argmax(predictions)
+    if class_index == 0:
+        st.write("The fish is fresh!")
+    else:
+        st.write("The fish is non-fresh!")
